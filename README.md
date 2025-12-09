@@ -5,4 +5,5 @@
 
 ## 用法
 前端插件直接在扩展中安装即可，后端插件在`plugins/`中，需要先在`config.yaml`中启用`enableServerPlugins`，然后把其中的文件复制到`SillyTavern/plugins/`下。
+点击左上角`实时连接 (SSE) `开始抓取，断开连接后会自动停止抓取。
 具体参考[服务器插件](https://st-docs.role.fun/for-contributors/server-plugins/)
