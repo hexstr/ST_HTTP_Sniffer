@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style type="text/css">
+      body,
+      html {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      .http-observe-dialog {
+        background: #1f1f1f;
+        color: #e6e6e6;
+        border: 1px solid #3a3a3a;
+        border-radius: 8px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+        opacity: 1 !important;
+        height: calc(100% - 40px);
+        margin: 20px;
+      }
+      .http-observe-dialog-header {
+        cursor: move;
+        padding: 8px 12px;
+        border-bottom: 1px solid #3a3a3a;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+      }
+      .http-observe-title {
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .http-observe-btn {
+        display: inline-block;
+        padding: 6px 12px;
+        background: #3a6ea5;
+        color: #fff;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        font-size: 13px;
+        line-height: 1.2;
+        text-align: center;
+        cursor: pointer;
+      }
+      .http-observe-btn:hover {
+        background: #4a85c7;
+      }
+      .http-observe-btn.danger {
+        background: #a53a3a;
+      }
+      .http-observe-btn.danger:hover {
+        background: #c74a4a;
+      }
+      .http-observe-dialog-body {
+        height: calc(100% - 10px);
+        display: flex;
+        flex-direction: column;
+        padding: 5px;
+      }
+      .http-observe-controls {
+        padding: 8px;
+        border-bottom: 1px solid #3a3a3a;
+        color: #e6e6e6;
+      }
+      .http-observe-table-wrapper {
+        flex: 1 1 auto;
+        overflow: auto;
+        padding: 8px;
+        background: #141414;
+        color: #e6e6e6;
+      }
+      #http_observe_table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      #http_observe_table td,
+      #http_observe_table th {
+        font-size: 12px;
+        vertical-align: top;
+        border-bottom: 1px dashed #4b4b4b;
+        padding: 6px 6px;
+        color: #e6e6e6;
+      }
+      #http_observe_table th {
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      #http_observe_table td.url {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        word-break: break-all;
+      }
+      .http-observe-textarea {
+        width: 100%;
+        min-height: 100px;
+        resize: vertical;
+        color: #e6e6e6;
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+        padding: 6px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        line-height: 1.35;
+      }
+      .http-observe-resizable {
+        display: inline-block;
+        resize: both;
+        overflow: auto;
+        min-width: 220px;
+        min-height: 100px;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      .http-observe-textarea {
+        width: 100%;
+        height: 100%;
+        resize: none;
+        background: #202020;
+        color: #e6e6e6;
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+        padding: 6px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        line-height: 1.35;
+        box-sizing: border-box;
+      }
+      @media (pointer: coarse) {
+        .http-observe-dialog {
+          width: 92vw;
+          height: 64vh;
+          right: 4vw;
+          bottom: 4vh;
+        }
+      }
+      .http-observe-dialog * {
+        writing-mode: horizontal-tb !important;
+        text-transform: none !important;
+        letter-spacing: normal !important;
+        box-shadow: none;
+        filter: none;
+      }
+      tr.summary.selected {
+        background: rgba(255, 255, 255, 0.04);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="http_observe_dialog" class="http-observe-dialog">
+      <div class="http-observe-dialog-body">
+        <div
+          class="http-observe-controls"
+          style="padding: 8px; border-bottom: 1px solid #3a3a3a; color: #e6e6e6"
+        >
+          <div class="top-part">
+            <label>
+              <input
+                type="checkbox"
+                id="http_observe_live_enabled"
+                style="margin: 0 5px 0 0"
+              />
+              实时连接 (SSE)
+            </label>
+            <label style="margin-left: 12px"
+              >最大行数
+              <input
+                type="number"
+                id="http_observe_max_rows"
+                min="10"
+                step="10"
+                style="width: 90px"
+                value="100"
+            /></label>
+            <label style="margin-left: 12px"
+              ><input
+                type="checkbox"
+                id="http_observe_auto_scroll"
+                style="margin: 0 5px 0 0"
+                checked
+              />
+              自动滚动
+            </label>
+            <button
+              id="http_observe_fetch"
+              class="http-observe-btn"
+              style="margin-left: 12px"
+            >
+              拉取最新
+            </button>
+            <button
+              id="http_observe_clear"
+              class="http-observe-btn danger"
+              style="margin-left: 6px"
+            >
+              清空日志
+            </button>
+          </div>
+          <div class="bottom-part">
+            <span>当前条数：<b id="http_observe_count">0</b></span>
+            <span style="margin-left: 12px">
+              缓冲上限：<b id="http_observe_max">—</b>
+            </span>
+            <span style="margin-left: 12px">
+              SSE 状态：<b id="http_observe_sse_status">未连接</b>
+            </span>
+          </div>
+        </div>
+        <div
+          class="http-observe-content"
+          style="flex: 1 1 auto; display: flex; min-height: 0"
+        >
+          <div
+            class="http-observe-table-wrapper"
+            style="
+              flex: 1 1 auto;
+              overflow: auto;
+              padding: 8px;
+              background: #141414;
+              color: #e6e6e6;
+            "
+          >
+            <table
+              id="http_observe_table"
+              style="width: 100%; border-collapse: collapse"
+            >
+              <thead>
+                <tr>
+                  <th style="width: 18px"></th>
+                  <th style="width: 120px">时间</th>
+                  <th style="width: 60px">耗时</th>
+                  <th style="width: 40px">方法</th>
+                  <th style="width: 40px">状态码</th>
+                  <th>URL</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div
+            id="http_observe_sidepanel"
+            style="
+              width: 60%;
+              min-width: 360px;
+              max-width: 75%;
+              border-left: 1px solid #3a3a3a;
+              background: #171717;
+              color: #e6e6e6;
+              display: flex;
+              flex-direction: column;
+            "
+          >
+            <div
+              id="http_observe_sidepanel_header"
+              style="padding: 10px; border-bottom: 1px solid #3a3a3a"
+            >
+              <div
+                style="font-weight: 600; font-size: 13px; margin-bottom: 6px"
+              >
+                详情
+              </div>
+              <div
+                id="http_observe_sidepanel_meta"
+                style="
+                  display: flex;
+                  gap: 12px;
+                  flex-wrap: wrap;
+                  font-size: 12px;
+                  color: #d7d7d7;
+                "
+              >
+                <div><b>Method:</b> —</div>
+                <div><b>Status:</b> —</div>
+                <div><b>Duration:</b> —</div>
+                <div><b>Time:</b> —</div>
+              </div>
+              <div style="margin-top: 6px; font-size: 12px; color: #cfcfcf">
+                URL
+              </div>
+              <div
+                id="http_observe_sidepanel_url"
+                style="
+                  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco,
+                    monospace;
+                  font-size: 12px;
+                  line-height: 1.35;
+                  background: #202020;
+                  border: 1px solid #3a3a3a;
+                  border-radius: 6px;
+                  padding: 8px;
+                  word-break: break-word;
+                "
+              >
+                —
+              </div>
+            </div>
+            <div style="display: flex; border-bottom: 1px solid #3a3a3a">
+              <button
+                class="http-observe-tab-btn active"
+                data-tab="request"
+                style="
+                  flex: 1 1 0;
+                  padding: 8px 12px;
+                  background: #1f1f1f;
+                  color: #fff;
+                  border: none;
+                  border-right: 1px solid #3a3a3a;
+                  cursor: pointer;
+                "
+              >
+                Request
+              </button>
+              <button
+                class="http-observe-tab-btn"
+                data-tab="response"
+                style="
+                  flex: 1 1 0;
+                  padding: 8px 12px;
+                  background: #151515;
+                  color: #fff;
+                  border: none;
+                  cursor: pointer;
+                "
+              >
+                Response
+              </button>
+            </div>
+            <div
+              id="http_observe_tab_request"
+              class="http-observe-tab"
+              style="
+                flex: 1 1 auto;
+                overflow: auto;
+                padding: 12px;
+                display: block;
+              "
+            >
+              <div style="font-size: 12px; color: #cfcfcf; margin-bottom: 6px">
+                Headers
+              </div>
+              <pre
+                id="http_observe_req_headers"
+                style="
+                  white-space: pre-wrap;
+                  margin: 0;
+                  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco,
+                    monospace;
+                  font-size: 12px;
+                  line-height: 1.35;
+                  background: #202020;
+                  border: 1px solid #3a3a3a;
+                  border-radius: 6px;
+                  padding: 8px;
+                "
+              >
+—</pre
+              >
+              <div
+                style="
+                  margin-top: 10px;
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                "
+              >
+                <div style="font-size: 12px; color: #cfcfcf">Body</div>
+                <button
+                  id="http_observe_copy_req"
+                  class="http-observe-btn"
+                  style="padding: 4px 8px"
+                >
+                  复制
+                </button>
+              </div>
+              <textarea
+                id="http_observe_req_body"
+                style="
+                  width: 100%;
+                  min-height: 200px;
+                  resize: vertical;
+                  background: #202020 !important;
+                  color: #e6e6e6;
+                  border: 1px solid #3a3a3a;
+                  border-radius: 6px;
+                  padding: 8px;
+                  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco,
+                    monospace;
+                  line-height: 1.35;
+                "
+              ></textarea>
+            </div>
+            <div
+              id="http_observe_tab_response"
+              class="http-observe-tab"
+              style="
+                flex: 1 1 auto;
+                overflow: auto;
+                padding: 12px;
+                display: none;
+              "
+            >
+              <div style="font-size: 12px; color: #cfcfcf; margin-bottom: 6px">
+                Headers
+              </div>
+              <pre
+                id="http_observe_resp_headers"
+                style="
+                  white-space: pre-wrap;
+                  margin: 0;
+                  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco,
+                    monospace;
+                  font-size: 12px;
+                  line-height: 1.35;
+                  background: #202020;
+                  border: 1px solid #3a3a3a;
+                  border-radius: 6px;
+                  padding: 8px;
+                "
+              >
+—</pre
+              >
+              <div
+                style="
+                  margin-top: 10px;
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                "
+              >
+                <div style="font-size: 12px; color: #cfcfcf">Body</div>
+                <button
+                  id="http_observe_copy_resp"
+                  class="http-observe-btn"
+                  style="padding: 4px 8px"
+                >
+                  复制
+                </button>
+              </div>
+              <textarea
+                id="http_observe_resp_body"
+                style="
+                  width: 100%;
+                  min-height: 200px;
+                  resize: vertical;
+                  background: #202020 !important;
+                  color: #e6e6e6;
+                  border: 1px solid #3a3a3a;
+                  border-radius: 6px;
+                  padding: 8px;
+                  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco,
+                    monospace;
+                  line-height: 1.35;
+                "
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+    let selectedSummaryRow = null,
+      selectedEntry = null,
+      es = null;
+    function escapeHtml(e) {
+      return String(e)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+    function pretty(e) {
+      try {
+        var t;
+        return "string" == typeof e
+          ? ((t = JSON.parse(e)), JSON.stringify(t, null, 2))
+          : JSON.stringify(e, null, 2);
+      } catch {
+        return String(e ?? "");
+      }
+    }
+    function renderRow(t) {
+      var e = document.querySelector("#http_observe_table tbody");
+      let o = document.createElement("tr");
+      (o.className = "summary"),
+        (o.style.cursor = "pointer"),
+        (o.innerHTML = `
+    <td class="toggle-cell" style="width:18px;color:#bdbdbd;">▸</td>
+    <td>${escapeHtml(t.time ?? "")}</td>
+    <td>${escapeHtml(t.ms ?? "")}</td>
+    <td>${escapeHtml(t.method ?? "")}</td>
+    <td>${escapeHtml(t.statusCode ?? "")}</td>
+    <td style="font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;word-break:break-word;">
+      ${escapeHtml(t.url ?? "")}
+    </td>
+  `),
+        o.addEventListener("click", () => {
+          selectedSummaryRow && selectedSummaryRow.classList.remove("selected"),
+            (selectedSummaryRow = o).classList.add("selected"),
+            fillSidePanel((selectedEntry = t));
+          var e = document.getElementById("http_observe_auto_scroll");
+          e &&
+            e.checked &&
+            ((e = document.querySelector(
+              ".http-observe-table-wrapper"
+            )).scrollTop = e.scrollHeight);
+        }),
+        e.appendChild(o);
+      var r = (r = document.getElementById("http_observe_max_rows"))
+          ? Number(r.value)
+          : 100,
+        n = e.querySelectorAll("tr.summary");
+      if (n.length > r) {
+        var s = n.length - r;
+        for (let e = 0; e < s; e++) {
+          var d = n[e];
+          selectedSummaryRow &&
+            d === selectedSummaryRow &&
+            ((selectedSummaryRow = null), clearSidePanel()),
+            d.remove();
+        }
+      }
+      (r = e.querySelectorAll("tr.summary").length),
+        (document.getElementById("http_observe_count").textContent = String(r)),
+        (e = document.getElementById("http_observe_auto_scroll")) &&
+          e.checked &&
+          ((r = document.querySelector(
+            ".http-observe-table-wrapper"
+          )).scrollTop = r.scrollHeight);
+    }
+    function fillSidePanel(e) {
+      var t = e.requestHeaders ?? e.reqHeaders ?? e.headers ?? {},
+        o = e.responseHeaders ?? e.respHeaders ?? {},
+        r = e.requestBody ?? "",
+        n = e.responseBody ?? "",
+        s = `
+    <div><b>Method:</b> ${escapeHtml(e.method ?? "—")}</div>
+    <div><b>Status:</b> ${escapeHtml(e.statusCode ?? "—")}</div>
+    <div><b>Duration:</b> ${escapeHtml(null != e.ms ? e.ms : "—")} ${
+          null != e.ms ? "ms" : ""
+        }</div>
+    <div><b>Time:</b> ${escapeHtml(e.time ?? "—")}</div>
+  `;
+      (document.getElementById("http_observe_sidepanel_meta").innerHTML = s),
+        (document.getElementById("http_observe_sidepanel_url").textContent =
+          e.url ?? "—"),
+        (document.getElementById("http_observe_req_headers").textContent =
+          pretty(t)),
+        (document.getElementById("http_observe_req_body").value = pretty(r)),
+        (document.getElementById("http_observe_resp_headers").textContent =
+          pretty(o)),
+        (document.getElementById("http_observe_resp_body").value = pretty(n));
+    }
+    function clearSidePanel() {
+      (document.getElementById("http_observe_sidepanel_meta").innerHTML = `
+    <div><b>Method:</b> —</div>
+    <div><b>Status:</b> —</div>
+    <div><b>Duration:</b> —</div>
+    <div><b>Time:</b> —</div>
+  `),
+        (document.getElementById("http_observe_sidepanel_url").textContent =
+          "—"),
+        (document.getElementById("http_observe_req_headers").textContent = "—"),
+        (document.getElementById("http_observe_req_body").value = ""),
+        (document.getElementById("http_observe_resp_headers").textContent =
+          "—"),
+        (document.getElementById("http_observe_resp_body").value = "");
+    }
+    function initTabs() {
+      let r = document.querySelectorAll(".http-observe-tab-btn");
+      r.forEach((e) => {
+        e.addEventListener("click", (e) => {
+          var t = (e = e.currentTarget).dataset.tab,
+            e =
+              (r.forEach((e) => {
+                e.classList.remove("active"), (e.style.background = "#151515");
+              }),
+              e.classList.add("active"),
+              (e.style.background = "#1f1f1f"),
+              document.getElementById("http_observe_tab_request")),
+            o = document.getElementById("http_observe_tab_response");
+          "request" === t
+            ? ((e.style.display = "block"), (o.style.display = "none"))
+            : ((e.style.display = "none"), (o.style.display = "block"));
+        });
+      });
+      var e = document.getElementById("http_observe_copy_req");
+      e &&
+        e.addEventListener("click", () => {
+          document.getElementById("http_observe_req_body").select(),
+            document.execCommand("copy"),
+            "undefined" != typeof toastr &&
+              toastr.success &&
+              toastr.success("已复制 Request Body");
+        }),
+        (e = document.getElementById("http_observe_copy_resp")) &&
+          e.addEventListener("click", () => {
+            document.getElementById("http_observe_resp_body").select(),
+              document.execCommand("copy"),
+              "undefined" != typeof toastr &&
+                toastr.success &&
+                toastr.success("已复制 Response Body");
+          });
+    }
+    function connectSSE() {
+      es ||
+        ((document.getElementById("http_observe_sse_status").textContent =
+          "连接中…"),
+        ((es = new EventSource("/api/plugins/st_http_sniffer/sse")).onopen =
+          () => {
+            document.getElementById("http_observe_sse_status").textContent =
+              "已连接";
+          }),
+        (es.onerror = () => {
+          document.getElementById("http_observe_sse_status").textContent =
+            "错误/断开";
+        }),
+        (es.onmessage = (e) => {
+          try {
+            renderRow(JSON.parse(e.data));
+          } catch (e) {
+            console.warn("[st_http_sniffer] SSE parse error:", e);
+          }
+        }));
+    }
+    function disconnectSSE() {
+      es && (es.close(), (es = null)),
+        (document.getElementById("http_observe_sse_status").textContent =
+          "未连接");
+    }
+    async function fetchLatest() {
+      try {
+        var e = await (await fetch("/api/plugins/st_http_sniffer/logs")).json();
+        (document.getElementById("http_observe_max").textContent = String(
+          e.max ?? "—"
+        )),
+          (document.querySelector("#http_observe_table tbody").innerHTML = ""),
+          (e.logs ?? []).forEach(renderRow);
+      } catch (e) {
+        console.error("[st_http_sniffer] fetch logs failed:", e),
+          "undefined" != typeof toastr &&
+            toastr.error &&
+            toastr.error("拉取日志失败");
+      }
+    }
+    async function clearLogs() {
+      try {
+        var e = await (
+          await fetch("/api/plugins/st_http_sniffer/clear", { method: "GET" })
+        ).json();
+        if (!e.ok) throw new Error(e.message ?? "unknown error");
+        (document.querySelector("#http_observe_table tbody").innerHTML = ""),
+          (document.getElementById("http_observe_count").textContent = "0"),
+          clearSidePanel(),
+          "undefined" != typeof toastr &&
+            toastr.success &&
+            toastr.success("日志已清空");
+      } catch (e) {
+        console.error("[st_http_sniffer] clear logs failed:", e),
+          "undefined" != typeof toastr &&
+            toastr.error &&
+            toastr.error("清空日志失败");
+      }
+    }
+    function onLiveToggle(e) {
+      (e.target.checked ? connectSSE : disconnectSSE)();
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+      var e = document.getElementById("http_observe_live_enabled");
+      e && e.addEventListener("change", onLiveToggle),
+        (e = document.getElementById("http_observe_fetch")) &&
+          e.addEventListener("click", fetchLatest),
+        (e = document.getElementById("http_observe_clear")) &&
+          e.addEventListener("click", clearLogs),
+        initTabs(),
+        fetchLatest();
+    });
+  </script>
+</html>

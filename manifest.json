@@ -1,0 +1,11 @@
+{
+  "display_name": "ST HTTP Sniffer",
+  "loading_order": 5,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "hexstr",
+  "version": "1.0.0",
+  "homePage": "https://github.com/hexstr/ST_HTTP_Sniffer"
+}

@@ -1,0 +1,22 @@
+.http-observe-dialog{position:fixed;right:24px;bottom:24px;width:860px;height:520px;background:#1f1f1f;color:#e6e6e6;border:1px solid #3a3a3a;border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.45);z-index:9999;display:none;opacity:1!important}
+.http-observe-dialog-header{cursor:move;padding:8px 12px;border-bottom:1px solid #3a3a3a;display:flex;align-items:center;justify-content:space-between;user-select:none}
+.http-observe-title{font-weight:600;font-size:14px}
+.http-observe-btn{display:inline-block;padding:6px 12px;background:#3a6ea5;color:#fff;border:1px solid transparent;border-radius:6px;font-size:13px;line-height:1.2;text-align:center;cursor:pointer}
+.http-observe-btn:hover{background:#4a85c7}
+.http-observe-btn.danger{background:#a53a3a}
+.http-observe-btn.danger:hover{background:#c74a4a}
+.http-observe-dialog-body{height:calc(100% - 40px);display:flex;flex-direction:column;padding:20px}
+.http-observe-controls{padding:8px;border-bottom:1px solid #3a3a3a;color:#e6e6e6}
+.http-observe-table-wrapper{flex:1 1 auto;overflow:auto;padding:8px;background:#141414;color:#e6e6e6}
+#http_observe_table{width:100%;border-collapse:collapse}
+#http_observe_table td,#http_observe_table th{font-size:12px;vertical-align:top;border-bottom:1px dashed #4b4b4b;padding:6px 6px;color:#e6e6e6}
+#http_observe_table th{font-weight:600;white-space:nowrap}
+#http_observe_table td.url{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;word-break:break-all}
+.http-observe-textarea{width:100%;min-height:100px;resize:vertical;color:#e6e6e6;border:1px solid #3a3a3a;border-radius:6px;padding:6px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;line-height:1.35}
+.http-observe-resizable{display:inline-block;resize:both;overflow:auto;min-width:220px;min-height:100px;max-width:100%;box-sizing:border-box}
+.http-observe-textarea{width:100%;height:100%;resize:none;background:#202020;color:#e6e6e6;border:1px solid #3a3a3a;border-radius:6px;padding:6px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;line-height:1.35;box-sizing:border-box}
+.http-observe-resizer{position:absolute;width:14px;height:14px;right:2px;bottom:2px;cursor:se-resize;background:linear-gradient(135deg,transparent 0 50%,#666 50% 100%);opacity:.85}
+.http-observe-resizer:hover{opacity:1}
+@media (pointer:coarse){.http-observe-dialog{width:92vw;height:64vh;right:4vw;bottom:4vh}
+}
+.http-observe-dialog *{writing-mode:horizontal-tb!important;text-transform:none!important;letter-spacing:normal!important;box-shadow:none;filter:none}

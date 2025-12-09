@@ -1,0 +1,21 @@
+<div id="http_observe_panel" class="extension-block">
+  <div class="extension-title">
+    <h3>ST HTTP Sniffer</h3>
+    <small>点击按钮打开对话框，查看/复制请求体与响应体</small>
+  </div>
+
+  <div class="extension-controls">
+    <button id="http_observe_open_dialog" class="http-observe-btn">打开请求监视器</button>
+    <button id="http_observe_open_tab" class="http-observe-btn">在新标签页打开</button>
+  </div>
+</div>
+<script>
+    
+function openViewerTab() {
+  const url = "/api/plugins/st_http_sniffer/view";
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+$("#http_observe_open_tab").on("click", openViewerTab);
+
+</script>
