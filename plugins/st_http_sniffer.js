@@ -1,5 +1,5 @@
 
-// plugins/http-observe.js
+// plugins/st_http_sniffer.js
 // 抓取开关与 SSE 连接生命周期绑定：有 SSE 客户端时抓；无客户端时停抓。
 // 停止抓取不清空（由前端按钮决定）。
 // 路由：/health /stats /logs /sse /clear(GET) /debug/make
@@ -130,7 +130,7 @@ function patchNodeHttp(module, scheme) {
         if (typeof userCb === 'function') userCb(res);
       } catch (e) {
         // 防止“用户回调抛错”击穿到解析器：吞掉并打印
-        console.error('[http-observe] user callback error:', e);
+        console.error('[st_http_sniffer] user callback error:', e);
       }
     }
 
@@ -184,7 +184,7 @@ function patchNodeHttp(module, scheme) {
 
 function setupRoutes(router) {
   router.get('/health', (req, res) => {
-    res.json({ ok: true, plugin: 'http-observe', fetchPatched: !!globalThis.__fetch_patched__, captureEnabled });
+    res.json({ ok: true, plugin: 'st_http_sniffer', fetchPatched: !!globalThis.__fetch_patched__, captureEnabled });
   });
   router.get('/status', (req, res) => { res.json({ client: sseClients.size, count: logs.length, max: MAX_LOGS }); });
   router.get('/logs', (req, res) => { res.json({ count: logs.length, max: MAX_LOGS, logs }); });
@@ -236,7 +236,7 @@ function setupRoutes(router) {
       const r = await fetch('https://httpbin.org/anything', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ demo: 'http-observe', now: Date.now() }),
+        body: JSON.stringify({ demo: 'st_http_sniffer', now: Date.now() }),
       });
       const text = await r.text();
       res.json({ ok: true, status: r.status, len: text.length });
@@ -262,13 +262,13 @@ function setupRoutes(router) {
 }
 
 async function init(router) {
-  console.log('[http-observe] init start');
+  console.log('[st_http_sniffer] init start');
 
   patchNodeHttp(http, 'http');
   patchNodeHttp(https, 'https');
 
   setupRoutes(router);
-  console.log('[http-observe] routes: /api/plugins/http-observe/{health,stats,logs,sse,clear,debug/make}');
+  console.log('[st_http_sniffer] routes: /api/plugins/st_http_sniffer/{health,stats,logs,sse,clear,debug/make}');
   console.log('HTTP Observe plugin loaded!');
   return Promise.resolve();
 }
@@ -282,7 +282,7 @@ module.exports = {
   init,
   exit,
   info: {
-    id: 'http-observe',
+    id: 'st_http_sniffer',
     name: 'HTTP Observe',
     description: 'Capture server-side fetch bodies only while SSE is connected; proxy-friendly SSE.',
   },
