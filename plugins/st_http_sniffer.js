@@ -249,7 +249,7 @@ function setupRoutes(router) {
     // 注意：这是只读页，仍然复用现有的 /sse /logs /clear
     router.get('/view', (req, res) => {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      const htmlPath = path.join(__dirname, 'sniffer_log.html');
+      const htmlPath = path.join(__dirname, 'sniffer_view.html');
     try {
         const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
         res.end(htmlContent);
@@ -287,3 +287,4 @@ module.exports = {
     description: 'Capture server-side fetch bodies only while SSE is connected; proxy-friendly SSE.',
   },
 };
+
